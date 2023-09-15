@@ -59,8 +59,8 @@ func TestGetHostNameForValidRequest(t *testing.T) {
 	}
 
 	expectedResponse := []string{"mta-prod-1", "mta-prod-3"}
-	if len(response.Data) != len(expectedResponse) {
-		t.Errorf("Expected %d result(s), but got %d", len(expectedResponse), len(response.Data))
+	if len(response.ResultSet) != len(expectedResponse) {
+		t.Errorf("Expected %d result(s), but got %d", len(expectedResponse), len(response.ResultSet))
 	}
 }
 
@@ -89,12 +89,12 @@ func TestGetHostNameForInvalidThresholdRequest(t *testing.T) {
 	}
 
 	expectedErrorMessage := "Error converting string to int"
-	if response.Reason != expectedErrorMessage {
-		t.Errorf("Expected error message '%s', but got '%s'", expectedErrorMessage, response.Reason)
+	if response.ErrorReason != expectedErrorMessage {
+		t.Errorf("Expected error message '%s', but got '%s'", expectedErrorMessage, response.ErrorReason)
 	}
 
-	if response.Data != nil {
-		t.Errorf("Expected result data as 'Nil', but got '%s'", response.Data)
+	if response.ResultSet != nil {
+		t.Errorf("Expected result data as 'Nil', but got '%s'", response.ResultSet)
 	}
 }
 
@@ -115,8 +115,8 @@ func TestGetHostNameForMissingThresholdRequest(t *testing.T) {
 	}
 
 	expectedResponse := []string{"mta-prod-1", "mta-prod-3"}
-	if len(response.Data) != len(expectedResponse) {
-		t.Errorf("Expected %d result(s), but got %d", len(expectedResponse), len(response.Data))
+	if len(response.ResultSet) != len(expectedResponse) {
+		t.Errorf("Expected %d result(s), but got %d", len(expectedResponse), len(response.ResultSet))
 	}
 }
 
@@ -188,5 +188,28 @@ func TestIntegration(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var response HostnameResponse
+	if err := json.NewDecoder(rr.Body).Decode(&response); err != nil {
+		t.Fatal(err)
+	}
+
+	if response.Success != "True" {
+		t.Errorf("Expected Success to be 'True', got '%s'", response.Success)
+	}
+
+	expectedHostnames := []string{"mta-prod-1", "mta-prod-2", "mta-prod-3"}
+	for _, expected := range expectedHostnames {
+		found := false
+		for _, result := range response.ResultSet {
+			if result == expected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected hostname '%s' not found in ResultSet", expected)
+		}
 	}
 }

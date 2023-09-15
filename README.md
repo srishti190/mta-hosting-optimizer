@@ -24,3 +24,14 @@ go run service.go
 ```
 * For checking the output
     * http://localhost:8082/mta-hosting-optimizer
+
+* Output Data for the default threshold X=1
+
+  {
+    "ResultSet": [
+    "mta-prod-1",
+    "mta-prod-3"
+    ],
+    "Success": "True",
+    "ErrorReason": ""
+  }

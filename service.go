@@ -11,9 +11,9 @@ import (
 )
 
 type HostnameResponse struct {
-	Data    []string `json:"data"`
-	Success string   `json:"success"`
-	Reason  string   `json:"reason"`
+	ResultSet   []string `json:"ResultSet"`
+	Success     string   `json:"Success"`
+	ErrorReason string   `json:"ErrorReason"`
 }
 
 type HostnameIPActiveStatus struct {
@@ -69,9 +69,9 @@ func validateThresholdAndGetHostName(w http.ResponseWriter, r *http.Request) {
 	result := getInactiveHostNamesForThreshold(threshold)
 
 	respondWithJSON(w, http.StatusOK, HostnameResponse{
-		Data:    result,
-		Success: "True",
-		Reason:  "",
+		ResultSet:   result,
+		Success:     "True",
+		ErrorReason: "",
 	})
 }
 
@@ -114,9 +114,9 @@ func getEnv(key string, defaultValue string) string {
 func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(HostnameResponse{
-		Data:    nil,
-		Success: "False",
-		Reason:  message,
+		ResultSet:   nil,
+		Success:     "False",
+		ErrorReason: message,
 	})
 }
 
