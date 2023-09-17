@@ -16,11 +16,15 @@ go mod tidy
 ```
 * For checking test coverage
 ```shell
-go test -cover
+go test -cover ./...
 ```
 * For running the main program
+  - First build the project and run the generated binary
 ```shell
-go run service.go
+go build
+```
+```shell
+./mta-hosting-optimizer
 ```
 * For checking the output
     * http://localhost:8082/mta-hosting-optimizer

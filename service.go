@@ -2,56 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/joho/godotenv"
 	"log"
+	"mta-hosting-optimizer/dto"
 	"net/http"
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
-
-type HostnameResponse struct {
-	ResultSet   []string `json:"ResultSet"`
-	Success     string   `json:"Success"`
-	ErrorReason string   `json:"ErrorReason"`
-}
-
-type HostnameIPActiveStatus struct {
-	IP     string
-	Active bool
-}
-
-var HostnameMap map[string][]HostnameIPActiveStatus
-
-func main() {
-	err := loadSampleData()
-	if err != nil {
-		log.Fatal("Failed to load mock data: ", err)
-	}
-
-	http.HandleFunc("/mta-hosting-optimizer", validateThresholdAndGetHostName)
-	log.Fatal(http.ListenAndServe(":8082", nil))
-}
-
-func loadSampleData() error {
-	ips := []string{"127.0.0.1", "127.0.0.2", "127.0.0.3", "127.0.0.4", "127.0.0.5", "127.0.0.6"}
-	hostNames := []string{"mta-prod-1", "mta-prod-1", "mta-prod-2", "mta-prod-2", "mta-prod-2", "mta-prod-3"}
-	activeStatuses := []bool{true, false, true, true, false, false}
-
-	HostnameMap = make(map[string][]HostnameIPActiveStatus)
-
-	for i, ip := range ips {
-		hostName := hostNames[i]
-		status := activeStatuses[i]
-
-		HostnameMap[hostName] = append(HostnameMap[hostName], HostnameIPActiveStatus{
-			IP:     ip,
-			Active: status,
-		})
-	}
-
-	return nil
-}
 
 func validateThresholdAndGetHostName(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -68,7 +25,7 @@ func validateThresholdAndGetHostName(w http.ResponseWriter, r *http.Request) {
 
 	result := getInactiveHostNamesForThreshold(threshold)
 
-	respondWithJSON(w, http.StatusOK, HostnameResponse{
+	respondWithJSON(w, http.StatusOK, dto.HostnameResponse{
 		ResultSet:   result,
 		Success:     "True",
 		ErrorReason: "",
@@ -78,7 +35,7 @@ func validateThresholdAndGetHostName(w http.ResponseWriter, r *http.Request) {
 func getInactiveHostNamesForThreshold(threshold int) []string {
 	inactiveHosts := make([]string, 0)
 
-	for hostName, ipStatusList := range HostnameMap {
+	for hostName, ipStatusList := range dto.HostnameMap {
 		activeIPCount := 0
 
 		for _, ipStatus := range ipStatusList {
@@ -113,7 +70,7 @@ func getEnv(key string, defaultValue string) string {
 
 func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(HostnameResponse{
+	json.NewEncoder(w).Encode(dto.HostnameResponse{
 		ResultSet:   nil,
 		Success:     "False",
 		ErrorReason: message,

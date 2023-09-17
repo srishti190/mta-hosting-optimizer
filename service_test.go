@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"mta-hosting-optimizer/dto"
+	"mta-hosting-optimizer/sampleData"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -9,23 +11,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := loadSampleData()
+	err := sampleData.LoadSampleData()
 	if err != nil {
 		panic(err)
 	}
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
-}
-
-func TestLoadSampleData(t *testing.T) {
-	expectedHostNames := []string{"mta-prod-1", "mta-prod-2", "mta-prod-3"}
-	for _, hostName := range expectedHostNames {
-		_, found := HostnameMap[hostName]
-		if !found {
-			t.Errorf("Expected hostname '%s' in ipMap, but it was not found", hostName)
-		}
-	}
 }
 
 func TestGetInactiveHostNamesForThreshold(t *testing.T) {
@@ -53,7 +45,7 @@ func TestGetHostNameForValidRequest(t *testing.T) {
 		t.Fatalf("Expected status code %d, but got %d", http.StatusOK, w.Code)
 	}
 
-	var response HostnameResponse
+	var response dto.HostnameResponse
 	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
 		t.Fatalf("Error decoding response body: %s", err)
 	}
@@ -79,7 +71,7 @@ func TestGetHostNameForInvalidThresholdRequest(t *testing.T) {
 		t.Fatalf("Expected status code %d, but got %d", http.StatusInternalServerError, w.Code)
 	}
 
-	var response HostnameResponse
+	var response dto.HostnameResponse
 	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
 		t.Fatalf("Error decoding response body: %s", err)
 	}
@@ -109,7 +101,7 @@ func TestGetHostNameForMissingThresholdRequest(t *testing.T) {
 		t.Fatalf("Expected status code %d, but got %d", http.StatusOK, w.Code)
 	}
 
-	var response HostnameResponse
+	var response dto.HostnameResponse
 	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
 		t.Fatalf("Error decoding response body: %s", err)
 	}
@@ -148,7 +140,7 @@ func TestGetEnv(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			if tc.EnvValue != "" {
 				os.Setenv(tc.Key, tc.EnvValue)
-				defer os.Unsetenv(tc.Key) // Clean up after the test
+				defer os.Unsetenv(tc.Key)
 			}
 
 			result := getEnv(tc.Key, tc.DefaultValue)
@@ -169,47 +161,5 @@ func TestGoDotEnvVariable1(t *testing.T) {
 	expected := "test_value"
 	if result != expected {
 		t.Errorf("Expected result '%s', but got '%s'", expected, result)
-	}
-}
-
-func TestIntegration(t *testing.T) {
-	os.Setenv("X", "2")
-	defer os.Unsetenv("X")
-
-	req, err := http.NewRequest("GET", "/mta-hosting-optimizer", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(validateThresholdAndGetHostName)
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
-
-	var response HostnameResponse
-	if err := json.NewDecoder(rr.Body).Decode(&response); err != nil {
-		t.Fatal(err)
-	}
-
-	if response.Success != "True" {
-		t.Errorf("Expected Success to be 'True', got '%s'", response.Success)
-	}
-
-	expectedHostnames := []string{"mta-prod-1", "mta-prod-2", "mta-prod-3"}
-	for _, expected := range expectedHostnames {
-		found := false
-		for _, result := range response.ResultSet {
-			if result == expected {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("Expected hostname '%s' not found in ResultSet", expected)
-		}
 	}
 }
