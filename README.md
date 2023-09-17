@@ -19,13 +19,20 @@ go mod tidy
 go test -cover ./...
 ```
 * For running the main program
-  - First build the project and run the generated binary
+  - First build the project and then run the generated binary
 ```shell
 go build
 ```
 ```shell
 ./mta-hosting-optimizer
 ```
+
+* For detailed test coverage report 
+```shell
+go test -coverprofile=coverage.out ./...
+open coverage.html 
+```
+## Results
 * For checking the output
     * http://localhost:8082/mta-hosting-optimizer
 

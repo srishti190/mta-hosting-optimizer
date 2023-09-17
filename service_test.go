@@ -152,14 +152,27 @@ func TestGetEnv(t *testing.T) {
 	}
 }
 
-func TestGoDotEnvVariable1(t *testing.T) {
+func TestGoDotEnvVariableForValidFilePath(t *testing.T) {
 	os.Setenv("TEST_ENV_VAR", "test_value")
 	defer os.Unsetenv("TEST_ENV_VAR")
 
-	result := GoDotEnvVariable("TEST_ENV_VAR")
+	filePath := ".env"
+	result := GoDotEnvVariable("TEST_ENV_VAR", filePath)
 
 	expected := "test_value"
 	if result != expected {
 		t.Errorf("Expected result '%s', but got '%s'", expected, result)
+	}
+}
+
+func TestGoDotEnvVariableForInvalidFilePath(t *testing.T) {
+	os.Setenv("TEST_ENV_VAR", "test_value")
+	defer os.Unsetenv("TEST_ENV_VAR")
+
+	filePath := ""
+	result := GoDotEnvVariable("TEST_ENV_VAR", filePath)
+
+	if result != "" {
+		t.Errorf("Expected an empty string result, but got '%s'", result)
 	}
 }

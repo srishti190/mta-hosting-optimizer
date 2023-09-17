@@ -13,7 +13,7 @@ import (
 func validateThresholdAndGetHostName(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	thresholdEnv := GoDotEnvVariable("X")
+	thresholdEnv := GoDotEnvVariable("X", ".env")
 	threshold, err := strconv.Atoi(thresholdEnv)
 
 	if err != nil {
@@ -51,9 +51,10 @@ func getInactiveHostNamesForThreshold(threshold int) []string {
 	return inactiveHosts
 }
 
-func GoDotEnvVariable(key string) string {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+func GoDotEnvVariable(key string, filePath string) string {
+	if err := godotenv.Load(filePath); err != nil {
+		log.Printf("Error loading .env file: %v", err)
+		return ""
 	}
 
 	return getEnv(key, "1")
